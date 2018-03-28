@@ -33,14 +33,17 @@ local points = 0
 local formula
 -----countertext---
 --variables for the timer
-local totalSeconds = 5
-local secondsLeft = 5 
+local totalSeconds = 10
+local secondsLeft = 10 
 local clockText
 local countDownTimer
 
-local lives = 3
+local lives = 4
 local heart1
 local heart2
+local heart3 
+local heart4
+local gameOver
 
 --*** ADD LOCAL VARIABLE FOR: INCORRECT OBJECT, POINTS OBJECT, POINTS
 
@@ -50,8 +53,8 @@ local heart2
 
 local function UpdateTime()
 
-	-- decrwement the number of seconds
-	secondsLeft = seconds - 1
+	-- decrement the number of seconds
+	secondsLeft = secondsLeft - 1
 
 	--display the number of seconds left in the clock object 
 	clockText.text = secondsLeft .. ""
@@ -63,10 +66,30 @@ local function UpdateTime()
 
 		-- *** IF THERE ARE NO LIVES LEFT, PLAY A LOSE SOUND, SHOW A YOU LOSE IMAGE
 		-- AND  CANCEL THE TIMER REMOVE THE THIRD HEART BY MAKING IT INVISIBLE
-		if (lives == 2) then 
-			heart2.isVisible = false
+		
+		if (lives == 4) then 
+			heart4.isVisible = true
+			heart3.isVisible = true
+			heart2.isVisible = true
+			heart1.isVisible = true
+
+		elseif (lives == 3) then
+			heart4.isVisible = false
+			heart3.isVisible = true
+			heart2.isVisible = true
+			heart1.isVisible = true
+
+		elseif (lives == 2) then
+			heart4.isVisible = false
+			heart3.isVisible = false
+			heart2.isVisible = true
+			heart1.isVisible = true
+
 		elseif (lives == 1) then
-			heart1.isVisible = false
+			heart4.isVisible = false
+			heart3.isVisible = false
+			heart2.isVisible = false
+			heart1.isVisible = true
 		end
 
 		--*** CALL THE FUNCTION TO ASK A NEW QUESTION
@@ -78,7 +101,6 @@ local function StartTimer()
 	-- Create a countdown timer that loops infinitely
 	countDownTimer = timer.performWithDelay( 1000, UpdateTime, 0)
 end
-
 
 
 local function AskQuestion()
@@ -96,7 +118,6 @@ local function AskQuestion()
 	elseif (formula == 2) then
 		correctAnswer = randomNumber1 * randomNumber2
 		questionObject2.text = randomNumber1 .. "*" .. randomNumber2 .. "="
-		timer.performWithDelay(1500, HidequestionObject2)
 
 		if (formula == 3) then 
 			correctAnswer = randomNumber1 - randomNumber2
@@ -136,7 +157,7 @@ local function NumericFieldListener( event )
 		-- Clear text field
 		event.target.text = ""
 
-	elseif event.phase == "submitted" then
+	elseif (event.phase == "submitted" ) then
 
 		-- When the answer is submitted (enter key is pressed) set user input to user's answer
 		userAnswer = tonumber(event.target.text)
@@ -161,28 +182,35 @@ end
 -- OBJECT CREATION
 --------------------------------------------------------------------------------------
 
+--QUESTION OBJECTS
 -- Displays a question and sets the colour
 questionObject = display.newText( "", display.contentWidth/2.75, display.contentHeight/2, nil, 110 )
 questionObject:setTextColor(155/255, 42/255, 198/255)
-timer.performWithDelay(1500, HidequestionObject)
+timer.performWithDelay(1000, HidequestionObject)
 
 -- Displays a question and sets the colour
 questionObject2 = display.newText( "", display.contentWidth/2.75, display.contentHeight/2, nil, 110 )
 questionObject:setTextColor(155/255, 42/255, 198/255)
-timer.performWithDelay(1500, HidequestionObject2)
+timer.performWithDelay(1000, HidequestionObject2)
 
 -- Displays a question and sets the colour
 questionObject3 = display.newText( "", display.contentWidth/2.75, display.contentHeight/2, nil, 110 )
 questionObject:setTextColor(155/255, 42/255, 198/255)
-timer.performWithDelay(1500, HidequestionObject3)
-
-
+timer.performWithDelay(1000, HidequestionObject3)
+-----------------------------------------------------------
+--INCORRECT/CORRECT OBJECTS
 -- Create the correct text object and make it invisible
 correctObject = display.newText( "Correct!", display.contentWidth/2, display.contentHeight*2/3, nil, 50 )
 correctObject:setTextColor(50/255, 233/255, 10/255)
 correctObject.isVisible = false
 
--- displays numeber of points 
+-- Create the correct text object and make it invisible
+incorrectObject = display.newText( "Incorrect!", display.contentWidth/2, display.contentHeight*2/3, nil, 50 )
+incorrectObject:setTextColor(241/255, 62/255, 62/255)
+incorrectObject.isVisible = false
+-----------------------------------------------------------
+--POINTS/NUMERICFIELD
+-- displays number of points 
 pointsObject = display.newText("Points = 0", 90, 60, "Georgia", 40)
 pointsObject:setTextColor(255/255, 255/255, 255/255)
 pointsObject.isVisible = true
@@ -190,15 +218,8 @@ pointsObject.isVisible = true
 -- Create numeric Field
 numericField = native.newTextField( display.contentWidth/1.5, display.contentHeight/2, 190, 120 )
 numericField.inputType = "number"
-
--- Create the correct text object and make it invisible
-incorrectObject = display.newText( "Incorrect!", display.contentWidth/2, display.contentHeight*2/3, nil, 50 )
-incorrectObject:setTextColor(241/255, 62/255, 62/255)
-incorrectObject.isVisible = false
-
--- Add the event listener for the numberic field
-numericField:addEventListener( "userInput", NumericFieldListener )
-
+------------------------------------------------------------
+--HEART OBJECTS
 -- Create the lives to display on the screen 
 heart1 = display.newImageRect("Images/heart1.png", 100, 100)
 heart1.x = display.contentWidth * 7 / 8
@@ -217,9 +238,17 @@ heart3.y = display.contentHeight * 1 / 7
 heart4 = display.newImageRect("Images/heart4.png", 100, 100)
 heart4.x = display.contentWidth * 4 / 8
 heart4.y = display.contentHeight * 1 / 7 
+--Aditional Functions
+-- create the text object to hold the countdowm timer
+clockText = display.newText(secondsLeft, 520, 600, native.systemFontBold, 150)
+clockText: setFillColor( 40/255, 205/255, 198/255 )
 
+gameOver = display.newImageRect("Images/gameOver.png", 100, 100)
+gameOver.x = display.contentWidth * 2 / 8
+gameOver.y = display.contentHeight * 1 / 7 
 
-
+-- Add the event listener for the numberic field
+numericField:addEventListener( "userInput", NumericFieldListener )
 
 
 ----------------------------------------------------------------------------
@@ -228,3 +257,5 @@ heart4.y = display.contentHeight * 1 / 7
 
 -- Call the function to ask the question
 AskQuestion()
+UpdateTime()
+StartTimer()
