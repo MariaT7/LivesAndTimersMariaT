@@ -31,8 +31,10 @@ local formula
 local pointsObject
 local points = 0
 local formula
+
 -----countertext---
 --variables for the timer
+
 local totalSeconds = 10
 local secondsLeft = 10 
 local clockText
@@ -90,6 +92,16 @@ local function UpdateTime()
 			heart3.isVisible = false
 			heart2.isVisible = false
 			heart1.isVisible = true
+
+		elseif (lives == 0) then
+			heart4.isVisible = false
+			heart3.isVisible = false
+			heart2.isVisible = false
+			heart1.isVisible = false
+			numericField.isVisible = false
+			gameOver.isVisible = true
+
+
 		end
 
 		--*** CALL THE FUNCTION TO ASK A NEW QUESTION
@@ -106,7 +118,7 @@ end
 local function AskQuestion()
 	-- Generate 2 random numbers betweeen a max. and a min. number
 	randomNumber1 = math.random(10, 20)
-	randomNumber2 = math.random(1, 10)
+	randomNumber2 = math.random(0, 10)
 	randomNumber3 = math.random(10, 20)
 	formula = math.random(1, 3)
 
@@ -117,17 +129,15 @@ local function AskQuestion()
 
 	elseif (formula == 2) then
 		correctAnswer = randomNumber1 * randomNumber2
-		questionObject2.text = randomNumber1 .. "*" .. randomNumber2 .. "="
+		questionObject.text = randomNumber1 .. "*" .. randomNumber2 .. "="
 
-		if (formula == 3) then 
+	elseif (formula == 3) then 
 			correctAnswer = randomNumber1 - randomNumber2
-			questionObject3.text = randomNumber1 .. "-" .. randomNumber2 .. "="
+			questionObject.text = randomNumber1 .. "-" .. randomNumber2 .. "="
 
-		elseif (correctAnswer < 0) then
+	elseif (correctAnswer < 0) then
 			correctAnswer = randomNumber2 - randomNumber1
-			questionObject2.text = randomNumber2 .. "-" .. randomNumber1 .. "="
-					
-		end
+			questionObject.text = randomNumber2 .. "-" .. randomNumber1 .. "="
 	end
 end
 
@@ -148,33 +158,44 @@ local function Points()
 	pointsObject.text = "points=" .. points  
 end
 
-
 local function NumericFieldListener( event )
-
+	
 	-- User begins editing "numericField"
 	if ( event.phase == "began" ) then
 
-		-- Clear text field
+		-- clear text field
 		event.target.text = ""
 
-	elseif (event.phase == "submitted" ) then
+	elseif (event.phase == "submitted") then
 
-		-- When the answer is submitted (enter key is pressed) set user input to user's answer
+		-- when the answer is submitted (enter key is pressed) set user input to user's answer
 		userAnswer = tonumber(event.target.text)
 
-		-- If the users answer and the correct answer are the same:
+		-- if the user answer and the correct answer are the same:
 		if (userAnswer == correctAnswer) then
 			correctObject.isVisible = true
-			timer.performWithDelay(1500, HideCorrect)
-
-			-- calls points function
-			Points()
-
-		elseif (userAnswer ~= correctAnswer) then
-			incorrectObject.isVisible = true
-			timer.performWithDelay(1500, Hideincorrect)
-
+			-- play a sound when the user gets it corrct
+		--	correctSoundChannel = audio.play(correctSound, {channel = 1})
+			-- when the user gets it correct add one point to the code and display it in text
+			points = points + 1
+			pointsObject.text = "Points : " .. points
+			-- clear text field
+			event.target.text = ""
+			-- call the HideCorrect function after 2 seconds
+			timer.performWithDelay(1000, HideCorrect)
+		 
+		 elseif (userAnswer ~= correctAnswer) then
+		 	incorrectObject.isVisible = true 
+			-- clear text field
+			event.target.text = ""
+			-- play a sound when the user gets it incorrct
+		--	incorrectSoundChannel = audio.play(incorrectSound, {channel = 2})
+			lives = lives - 1
+		 	-- call the HideInCorrect function after 1 second
+			timer.performWithDelay(1000, Hideincorrect)
 		end
+		-- reset the number of seconds 
+		secondsLeft = totalSeconds + 1
 	end
 end
 
@@ -186,17 +207,8 @@ end
 -- Displays a question and sets the colour
 questionObject = display.newText( "", display.contentWidth/2.75, display.contentHeight/2, nil, 110 )
 questionObject:setTextColor(155/255, 42/255, 198/255)
-timer.performWithDelay(1000, HidequestionObject)
+timer.performWithDelay(500, HidequestionObject)
 
--- Displays a question and sets the colour
-questionObject2 = display.newText( "", display.contentWidth/2.75, display.contentHeight/2, nil, 110 )
-questionObject:setTextColor(155/255, 42/255, 198/255)
-timer.performWithDelay(1000, HidequestionObject2)
-
--- Displays a question and sets the colour
-questionObject3 = display.newText( "", display.contentWidth/2.75, display.contentHeight/2, nil, 110 )
-questionObject:setTextColor(155/255, 42/255, 198/255)
-timer.performWithDelay(1000, HidequestionObject3)
 -----------------------------------------------------------
 --INCORRECT/CORRECT OBJECTS
 -- Create the correct text object and make it invisible
@@ -211,8 +223,8 @@ incorrectObject.isVisible = false
 -----------------------------------------------------------
 --POINTS/NUMERICFIELD
 -- displays number of points 
-pointsObject = display.newText("Points = 0", 90, 60, "Georgia", 40)
-pointsObject:setTextColor(255/255, 255/255, 255/255)
+pointsObject = display.newText("Points = 0", 120, 60, "Georgia", 50)
+pointsObject:setTextColor(255/255, 205/255, 205/255)
 pointsObject.isVisible = true
 
 -- Create numeric Field
@@ -243,9 +255,11 @@ heart4.y = display.contentHeight * 1 / 7
 clockText = display.newText(secondsLeft, 520, 600, native.systemFontBold, 150)
 clockText: setFillColor( 40/255, 205/255, 198/255 )
 
-gameOver = display.newImageRect("Images/gameOver.png", 100, 100)
-gameOver.x = display.contentWidth * 2 / 8
-gameOver.y = display.contentHeight * 1 / 7 
+gameOver = display.newImageRect("Images/gameOver.png", display.contentWidth, display.contentHeight)
+gameOver.anchorX = 0
+gameOver.anchorY = 0
+gameOver.isVisible = false
+
 
 -- Add the event listener for the numberic field
 numericField:addEventListener( "userInput", NumericFieldListener )
@@ -257,5 +271,6 @@ numericField:addEventListener( "userInput", NumericFieldListener )
 
 -- Call the function to ask the question
 AskQuestion()
-UpdateTime()
 StartTimer()
+-- add sound
+
